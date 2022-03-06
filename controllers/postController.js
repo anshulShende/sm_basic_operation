@@ -1,4 +1,5 @@
 const Post = require("../models/postModel");
+const Comment = require("../models/commentModel");
 
 const createPost = (req, res) => {
   const newPost = new Post(req.body);
@@ -47,7 +48,6 @@ const toggleLikeforSpecificPost = async (req, res) => {
     } else {
       post.likes.splice(liked, 1);
     }
-
     await post.save();
     return res.status(200).json({result: "Success", message: "Likes for Post updated successfully", likes: post.likes.length});
   } catch (err) {
@@ -55,4 +55,61 @@ const toggleLikeforSpecificPost = async (req, res) => {
   }
 }
 
-module.exports = { createPost, getSpecificPost, fetchAllPostsBySpecificUser, toggleLikeforSpecificPost };
+const commentOnPost = async (req,res) => {
+  postId = req.body.postId;
+  comment = req.body.comment;
+  userId = req.body.userId;
+  try{
+    const newComment = new Comment({
+      postId: postId,
+      userId: userId,
+      comment: comment,
+      isReply: false
+    });
+    newComment.save()
+      .then(async (comment) => {
+        console.log(comment);
+        const post = await Post.findById(req.body.postId);
+        if (post==null || post.length == 0) {
+          return res.status(400).json({result: "Error", message: 'Post does not exist' });
+        }
+        post.comments.push(comment._id);
+        await post.save();
+        return res.status(200).json({result: "Success", message: "Successfully Commented on Post"});
+      }).catch(err => {
+        return res.status(400).json({result: "Error", message: 'Error Occurred.. Please try Again' });
+    });
+
+  } catch (err){
+      return res.status(400).json({result: "Error", message: 'Error Occurred.. Please try Again' });
+  }
+}
+
+const likeAComment = async (req,res) => {
+  postId = req.body.postId;
+  commentId = req.body.commentId;
+  userId = req.body.userId;
+  try{
+    const post = await Post.findById(postId);
+    if (post==null || post.length == 0) {
+      return res.status(400).json({result: "Error", message: 'Post does not exist' });
+    }
+    if(post.comments.indexOf(commentId) === -1 ){
+      return res.status(400).json({result: "Error", message: 'Comment Does not exist for this Post' });
+    }
+    const comment = await Comment.findById(commentId);
+    const liked = comment.likes.indexOf(userId);
+
+    if (liked === -1) {
+      comment.likes.push(userId);
+    } else {
+      comment.likes.splice(liked, 1);
+    }
+    await comment.save();
+    return res.status(400).json({result: "Success", message: 'Likes for Comment Updated' });
+  } catch(err){
+    return res.status(400).json({result: "Error", message: 'Error Occurred.. Please try Again' });
+  }
+}
+
+module.exports = { createPost, getSpecificPost, fetchAllPostsBySpecificUser, toggleLikeforSpecificPost, commentOnPost, likeAComment };
