@@ -106,10 +106,45 @@ const likeAComment = async (req,res) => {
       comment.likes.splice(liked, 1);
     }
     await comment.save();
-    return res.status(400).json({result: "Success", message: 'Likes for Comment Updated' });
+    return res.status(200).json({result: "Success", message: 'Likes for Comment Updated' });
   } catch(err){
     return res.status(400).json({result: "Error", message: 'Error Occurred.. Please try Again' });
   }
 }
 
-module.exports = { createPost, getSpecificPost, fetchAllPostsBySpecificUser, toggleLikeforSpecificPost, commentOnPost, likeAComment };
+const fetchLikesOnPost = async (req,res) => {
+  try{
+    const post  = await Post.findById(req.params.postId).populate('likes', 'name').exec();
+    if(!post || post == null || post.length == 0){
+      return res.status(400).json({result: "Error", message: 'Post does not exist' });
+    }
+    return res.status(200).json({result: "Success", postId: post._id, likes: post.likes, message: 'Likes for Post fetched' });
+  }catch (err){
+    return res.status(400).json({result: "Error", message: 'Error Occurred.. Please try Again' });
+  }
+}
+
+const fetchCommentsOnPost = async (req,res) => {
+  try{
+    const post  = await Post.findById(req.params.postId)
+                  .populate({ path: 'comments',
+                              populate: [{ path : 'userId', select: 'name'}, { path : 'likes', select: 'name'}]
+                            }).exec();
+    if(!post || post == null || post.length == 0){
+      return res.status(400).json({result: "Error", message: 'Post does not exist' });
+    }
+    if(post.comments.length > 1){
+      posts.comments.sort((a, b) => {
+         let ca = new Date(a.createdAt),
+         cb = new Date(b.createdAt);
+         return cb-ca;
+       });
+   }
+    return res.status(200).json({result: "Success", postId: post._id, comments: post.comments, message: 'Comments for Post fetched' });
+  }catch (err){
+    return res.status(400).json({result: "Error", message: 'Error Occurred.. Please try Again' });
+  }
+}
+
+module.exports = { createPost, getSpecificPost, fetchAllPostsBySpecificUser, toggleLikeforSpecificPost,
+   commentOnPost, likeAComment, fetchLikesOnPost, fetchCommentsOnPost };
