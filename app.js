@@ -9,6 +9,7 @@ var logger = require('morgan');
 const usersRouter = require('./routes/usersRouter');
 const authRouter = require('./routes/authRouter');
 const postRouter = require('./routes/postRouter');
+const feedRouter = require('./routes/feedRoutes');
 
 var app = express();
 
@@ -31,5 +32,6 @@ db.on('error', (err) => {
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/post', postRouter);
+app.use('/post', feedRouter);
 
 module.exports = app;
