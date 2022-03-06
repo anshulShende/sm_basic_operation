@@ -32,4 +32,27 @@ const fetchAllPostsBySpecificUser = (req,res) => {
   });
 }
 
-module.exports = { createPost, getSpecificPost, fetchAllPostsBySpecificUser };
+const toggleLikeforSpecificPost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.body.postId);
+    
+    if (post==null || post.length == 0) {
+      return res.status(400).json({result: "Error", message: 'Post does not exist' });
+    }
+    const liked = post.likes.indexOf(req.body.userId);
+    console.log(liked);
+
+    if (liked === -1) {
+      post.likes.push(req.body.userId);
+    } else {
+      post.likes.splice(liked, 1);
+    }
+
+    await post.save();
+    return res.status(200).json({result: "Success", message: "Likes for Post updated successfully", likes: post.likes.length});
+  } catch (err) {
+      return res.status(400).json({result: "Error", message: 'Error Occurred.. Please try Again' });
+  }
+}
+
+module.exports = { createPost, getSpecificPost, fetchAllPostsBySpecificUser, toggleLikeforSpecificPost };

@@ -32,6 +32,6 @@ db.on('error', (err) => {
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/post', postRouter);
-app.use('/post', feedRouter);
+app.use('/feed', feedRouter);
 
 module.exports = app;
